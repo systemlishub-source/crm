@@ -123,9 +123,9 @@ export function middleware(req: NextRequest){
   return NextResponse.next()
 }
 
-export const config = {
-  matcher: [
-    '/((?!_next/|favicon.ico|api/|static/|images/|layout/|fonts/|themes/|.*\\.).*)',
-  ],
-}
+// export const config = {
+//   matcher: [
+//     '/((?!_next/|favicon.ico|api/|static/|images/|layout/|fonts/|themes/|.*\\.).*)',
+//   ],
+// }
 export default middleware
