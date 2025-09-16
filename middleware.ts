@@ -50,6 +50,20 @@ export function checkTokenStatus(token: string): TokenStatus {
 export function middleware(req: NextRequest){
   const pathname = req.nextUrl.pathname
 
+  // Permite todas as requisições para rotas API
+  if (pathname.startsWith('/api/')) {
+    // Handle CORS preflight requests
+    if (req.method === 'OPTIONS') {
+      const response = NextResponse.next()
+      response.headers.set('Access-Control-Allow-Origin', '*')
+      response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+      response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+      return response
+    }
+    
+    return NextResponse.next()
+  }
+
   console.log('Middleware:', pathname)
 
   const publicRoute = publicRoutes.find(route => route.path === pathname)
@@ -123,9 +137,9 @@ export function middleware(req: NextRequest){
   return NextResponse.next()
 }
 
-// export const config = {
-//   matcher: [
-//     '/((?!_next/|favicon.ico|api/|static/|images/|layout/|fonts/|themes/|.*\\.).*)',
-//   ],
-// }
+export const config = {
+  matcher: [
+    '/((?!api/|_next/|static/|images/|favicon.ico|\.).*)',
+  ],
+}
 export default middleware
