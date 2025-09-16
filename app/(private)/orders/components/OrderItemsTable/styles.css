@@ -1,0 +1,33 @@
+/* styles/globals.css */
+@media (max-width: 768px) {
+    .order-item-card {
+        transition: transform 0.2s ease;
+    }
+    
+    .order-item-card:active {
+        transform: scale(0.98);
+    }
+    
+    .swipe-to-delete {
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .swipe-to-delete::after {
+        content: 'Deslize para remover';
+        position: absolute;
+        right: -100%;
+        top: 50%;
+        transform: translateY(-50%);
+        background: #f44336;
+        color: white;
+        padding: 8px 12px;
+        border-radius: 4px;
+        font-size: 12px;
+        transition: right 0.3s ease;
+    }
+    
+    .swipe-to-delete:hover::after {
+        right: 10px;
+    }
+}

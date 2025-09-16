@@ -1,0 +1,131 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Users {
+  id                 String   @id @default(uuid())
+  name               String
+  email              String   @unique
+  password           String
+  status             Int      @default(1)
+  cpf                String   @unique
+  phoneNumber        String
+  role               Role
+  createdAt          DateTime @default(now())
+  mustChangePassword Boolean  @default(true)
+
+  passwordResets passwordReset[]
+  address        Address[]
+
+  // funcionário pode registrar várias ordens
+  orders Order[]
+}
+
+enum Role {
+  Administrador
+  UsuarioPadrao
+}
+
+model Address {
+  id         Int    @id @default(autoincrement())
+  cep        String
+  country    String
+  state      String
+  city       String
+  district   String
+  street     String
+  complement String
+
+  userId   String?
+  user     Users?  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  clientId String?
+  client   Client? @relation(fields: [clientId], references: [id], onDelete: Cascade)
+}
+
+model passwordReset {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  user      Users    @relation(fields: [userId], references: [id])
+}
+
+model Products {
+  id            Int      @id @default(autoincrement())
+  code          String   @unique
+  type          String
+  name          String
+  model         String
+  description   String?
+  image         String?
+  size          String?
+  sizeNumber    Int      
+  color         String
+  material      String
+  purchaseValue Float
+  saleValue     Float
+  margin        Float
+  status        Int      @default(1) // 1 - Ativo, 0 - Inativo
+  quantity      Int
+  supplier      String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  orderItems OrderItem[]
+}
+
+/// Cliente final (quem compra na loja, não acessa o sistema)
+model Client {
+  id          String   @id @default(uuid())
+  name        String
+  email       String  @unique
+  phoneNumber String
+  cpf         String?
+  rg          String?
+  gender      String
+  status      Int      @default(1) // 1 - Ativo, 0 - Inativo
+  birthDate   DateTime
+  createdAt   DateTime @default(now())
+
+  orders Order[]
+  address Address[] // Adicione esta linha para relacionamento com endereços
+}
+
+/// Ordem de compra registrada por um funcionário para um cliente
+model Order {
+  id         Int      @id @default(autoincrement())
+  clientId   String
+  client     Client   @relation(fields: [clientId], references: [id])
+
+  userId    String
+  user      Users     @relation(fields: [userId], references: [id])
+
+  purchaseDate DateTime @default(now())
+  notes        String?
+
+  orderItems OrderItem[]
+}
+
+/// Relaciona produtos a uma ordem (N:N com dados extras)
+model OrderItem {
+  id        Int    @id @default(autoincrement())
+  orderId   Int   
+  productId Int
+  quantity  Int
+  price     Float // valor unitário na hora da compra
+
+  order   Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Products @relation(fields: [productId], references: [id],  onDelete: Cascade)
+}
