@@ -111,3 +111,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Erro interno do servidor.' }, { status: 500 })
   }
 }
+
+
+export async function OPTIONS() {
+  return new Response(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS, GET, PUT, DELETE, PATCH',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    },
+  })
+}
