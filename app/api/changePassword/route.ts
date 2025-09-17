@@ -1,5 +1,5 @@
 import { prisma } from '@/app/api/lib/prisma'
-import bcrypt from 'bcrypt'
+import bcrypt from 'bcryptjs'
 import { z } from 'zod'
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyAuthHeaderFromAuthorization } from '../lib/auth'
