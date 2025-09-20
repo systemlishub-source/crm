@@ -257,7 +257,7 @@ const ViewClientDialog = ({ client, visible, onHide }: ViewClientDialogProps) =>
                     
                     <div className="grid">
                         <div className="col-6 md:col-3 mb-3">
-                            <label className="block text-600 text-sm font-medium mb-1">Total de Pedidos</label>
+                            <label className="block text-600 text-sm font-medium mb-1">Total de Vendas</label>
                             <div className="text-900 font-bold text-xl">
                                 {spendingData.totalOrders}
                                 {spendingData.totalOrders > 0 && (
@@ -294,8 +294,8 @@ const ViewClientDialog = ({ client, visible, onHide }: ViewClientDialogProps) =>
                         {spendingData.totalOrders > 0 && (
                             <div className="col-12 mb-3">
                                 <div className="text-600 text-sm">
-                                    {spendingData.totalOrders} pedido(s) • {spendingData.totalItems} item(s) • 
-                                    Média de {formatCurrency(spendingData.averageTicket)} por pedido
+                                    {spendingData.totalOrders} venda(s) • {spendingData.totalItems} item(s) • 
+                                    Média de {formatCurrency(spendingData.averageTicket)} por venda
                                 </div>
                             </div>
                         )}
@@ -349,17 +349,17 @@ const ViewClientDialog = ({ client, visible, onHide }: ViewClientDialogProps) =>
                     </div>
                 )}
 
-                {/* Histórico de Pedidos */}
+                {/* Histórico de Vendas */}
                 {client.orders && client.orders.length > 0 && (
                     <div className="col-12 mt-4">
-                        <h4 className="m-0 mb-3">Últimos Pedidos</h4>
+                        <h4 className="m-0 mb-3">Últimos Vendas</h4>
                         <Divider />
                         
                         <div className="flex flex-column gap-3">
                             {client.orders.slice(0, 5).map((order: any, index: number) => (
                                 <div key={index} className="p-3 border-round surface-100">
                                     <div className="flex justify-content-between align-items-start mb-2">
-                                        <span className="font-semibold">Pedido #{index + 1}</span>
+                                        <span className="font-semibold">Venda #{index + 1}</span>
                                         <span className="text-green-500 font-bold">
                                             {formatCurrency(
                                                 order.orderItems.reduce((total: number, item: any) => 
@@ -384,7 +384,7 @@ const ViewClientDialog = ({ client, visible, onHide }: ViewClientDialogProps) =>
                             
                             {client.orders.length > 5 && (
                                 <div className="text-center text-sm text-600 mt-2">
-                                    + {client.orders.length - 5} pedido(s) anterior(es)
+                                    + {client.orders.length - 5} venda(s) anterior(es)
                                 </div>
                             )}
                         </div>

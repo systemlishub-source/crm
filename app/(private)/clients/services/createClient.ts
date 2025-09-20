@@ -9,5 +9,10 @@ export const createClient = async (clientData: any) => {
             address: clientData.address[0]
         }),
     });
+    if (response.status === 401) {
+        // Token expirado - redireciona para login
+        window.location.href = '/login';
+        throw new Error('Não autorizado - redirecionando para login');
+        }
     return response.json();
 };

@@ -195,7 +195,7 @@ export default function ProductSelection({
                 <div className="col-12 md:col-3">
                     <div className="field pt-4">
                         <Button
-                            label={isMobile ? "Adicionar" : "Adicionar ao Pedido"}
+                            label={isMobile ? "Adicionar" : "Adicionar ao carrinho"}
                             icon="pi pi-shopping-cart"
                             onClick={onAddProduct}
                             disabled={!selectedProduct || loading || quantityError !== '' || quantity > (selectedProduct?.quantity || 0)}

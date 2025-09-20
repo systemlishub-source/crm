@@ -74,6 +74,12 @@ interface saveUserParams {
             }),
           });
 
+          if (res.status === 401) {
+            // Token expirado - redireciona para login
+            window.location.href = '/login';
+            throw new Error('Não autorizado - redirecionando para login');
+          }
+
           if (!res.ok) {
             const errorData = await res.json();
             throw new Error(errorData.message || errorData.error || 'Erro ao criar usuário');

@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
 
     const parseResult = orderSchema.safeParse(body);
     if (!parseResult.success) {
-      return NextResponse.json({ error: 'Dados de pedido inválidos', issues: parseResult.error.issues }, { status: 400 });
+      return NextResponse.json({ error: 'Dados de venda inválidos', issues: parseResult.error.issues }, { status: 400 });
     }
 
     // Verificar se o cliente existe

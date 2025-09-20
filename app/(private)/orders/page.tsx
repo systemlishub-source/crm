@@ -14,16 +14,22 @@ export default function OrdersPage() {
         try {
             setLoading(true);
             const response = await fetch('/api/orders');
+
+            if (response.status === 401) {
+            // Token expirado - redireciona para login
+            window.location.href = '/login';
+            throw new Error('Não autorizado - redirecionando para login');
+            }
             
             if (!response.ok) {
-                throw new Error('Falha ao carregar pedidos');
+                throw new Error('Falha ao carregar vendas');
             }
             
             const data = await response.json();
             setOrders(data.orders || []);
             
         } catch (error) {
-            console.error("Erro ao buscar pedidos:", error);
+            console.error("Erro ao buscar vendas:", error);
         } finally {
             setLoading(false);
         }

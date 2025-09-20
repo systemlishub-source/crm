@@ -21,6 +21,12 @@ export const ativateUser = async (
           status: 1 // Reativa o usuario
         }),
       });
+
+      if (res.status === 401) {
+      // Token expirado - redireciona para login
+      window.location.href = '/login';
+      throw new Error('Não autorizado - redirecionando para login');
+    }
   
       const data = await res.json();
   

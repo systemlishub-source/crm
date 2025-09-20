@@ -18,6 +18,11 @@ export default function BirthdayClients() {
         try {
             setLoading(true);
             const response = await fetch('/api/clients');
+            if (response.status === 401) {
+        // Token expirado - redireciona para login
+        window.location.href = '/login';
+        throw new Error('Não autorizado - redirecionando para login');
+        }
             const data = await response.json();
             setClients(data);
             

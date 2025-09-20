@@ -22,7 +22,7 @@ const AppMenu = () => {
         {
             label: 'Home',
             items: [
-                { label: 'Dashboard', icon: 'pi pi-fw pi-home', to: '/' },
+                { label: 'Produtos', icon: 'pi pi-fw pi-box', to: '/' },
                 { label: 'Vendas', icon: 'pi pi-fw pi-shopping-cart', to: '/orders' },
             ]
         },
@@ -31,6 +31,7 @@ const AppMenu = () => {
                 {
                     label: 'Administração',
                     items: [
+                        { label: 'Relatórios', icon: 'pi pi-fw pi-chart-line', to: '/reports' },
                         { label: 'Usuários', icon: 'pi pi-fw pi-user', to: '/users' },
                         { label: 'Controle de Produtos', icon: 'pi pi-fw pi-box', to: '/manageProducts' },
                         { label: 'Clientes', icon: 'pi pi-fw pi-users', to: '/clients' },

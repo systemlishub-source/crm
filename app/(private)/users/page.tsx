@@ -83,6 +83,12 @@ const UsersPage = () => {
         credentials: 'include',
       });
 
+      if (res.status === 401) {
+        // Token expirado - redireciona para login
+        window.location.href = '/login';
+        throw new Error('Não autorizado - redirecionando para login');
+      }
+
       const data = await res.json();
 
       if (!res.ok) {

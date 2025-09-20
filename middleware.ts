@@ -32,10 +32,8 @@ export function checkTokenStatus(token: string): TokenStatus {
   try {
     const decoded = jwtDecode<JwtPayload>(token);
     const now = Math.floor(Date.now() / 1000);
-    const sixHours = 6 * 60 * 60;
 
-    // Considera o token expirado se o tempo atual for maior que o exp ou se o exp for maior que 6h
-    const expired = decoded.exp < now || decoded.exp > now + sixHours;
+    const expired = decoded.exp < now;
 
     return {
       expired,

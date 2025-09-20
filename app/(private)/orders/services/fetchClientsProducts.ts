@@ -17,6 +17,12 @@ export const fetchClientsProducts = async (
                 fetch('/api/products')
             ]);
 
+            if (clientsResponse.status === 401 || productsResponse.status === 401) {
+                // Token expirado - redireciona para login
+                window.location.href = '/login';
+                throw new Error('Não autorizado - redirecionando para login');
+            }
+
             const clientsData = await clientsResponse.json();
             const productsData = await productsResponse.json();
 

@@ -59,6 +59,12 @@ export const updateProduct = async (
       // Não definir Content-Type header - o browser fará isso automaticamente
     });
 
+    if (response.status === 401) {
+        // Token expirado - redireciona para login
+        window.location.href = '/login';
+        throw new Error('Não autorizado - redirecionando para login');
+        }
+
     if (response.ok) {
       // Sucesso
       const result = await response.json();

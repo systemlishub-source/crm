@@ -140,7 +140,7 @@ export default function OrderItemsTable({
                 ))}
             </div>
 
-            {/* Resumo do pedido */}
+            {/* Resumo do venda */}
             <div className="mt-4 p-3 surface-50 border-round">
                 <div className="grid">
                     <div className="col-6 md:col-8 text-sm">

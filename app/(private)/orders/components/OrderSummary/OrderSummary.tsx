@@ -16,7 +16,7 @@ export default function OrderSummary({
     return (
         <div className="text-right">
             <Button
-                label="Criar Pedido"
+                label="Registrar Venda"
                 icon="pi pi-check"
                 onClick={onCreateOrder}
                 disabled={!isValid || loading}

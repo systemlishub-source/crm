@@ -19,7 +19,7 @@ export default function NotesSection({
             <InputText
                 value={notes}
                 onChange={(e) => onNotesChange(e.target.value)}
-                placeholder="Observações do pedido (opcional)"
+                placeholder="Observações da venda (opcional)"
                 className="w-full"
                 disabled={loading}
             />

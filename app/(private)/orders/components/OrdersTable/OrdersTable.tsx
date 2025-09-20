@@ -37,7 +37,7 @@ export default function OrdersTable({ orders, loading = false }: OrdersTableProp
         setGlobalFilter(value); // Atualiza também o filtro mobile
     };
 
-    // Filtra os pedidos para a visualização mobile
+    // Filtra os vendas para a visualização mobile
     const filteredOrders = useMemo(() => {
         if (!globalFilter) return orders;
         

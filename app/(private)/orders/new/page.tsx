@@ -114,7 +114,7 @@ export default function NewOrderPage() {
             }
         };
         setOrderItems([...orderItems, newItem]);
-        showToast('success', 'Sucesso', `${selectedProduct.name} adicionado ao pedido`);
+        showToast('success', 'Sucesso', `${selectedProduct.name} adicionado ao registro`);
     }
 
     setSelectedProduct(null);
@@ -124,7 +124,7 @@ export default function NewOrderPage() {
         const product = orderItems.find(item => item.productId === productId)?.product;
         setOrderItems(orderItems.filter(item => item.productId !== productId));
         if (product) {
-            showToast('info', 'Removido', `${product.name} removido do pedido`);
+            showToast('info', 'Removido', `${product.name} removido do registro`);
         }
     };
 
@@ -139,7 +139,7 @@ export default function NewOrderPage() {
         }
 
         if (orderItems.length === 0) {
-            showToast('error', 'Erro', 'Adicione pelo menos um produto ao pedido');
+            showToast('error', 'Erro', 'Adicione pelo menos um produto ao registro');
             return;
         }
 
@@ -162,15 +162,15 @@ export default function NewOrderPage() {
             });
 
             if (response.ok) {
-                showToast('success', 'Sucesso', 'Pedido criado com sucesso!');
+                showToast('success', 'Sucesso', 'Registro criado com sucesso!');
                 router.push('/orders');
             } else {
-                throw new Error('Falha ao criar pedido');
+                throw new Error('Falha ao criar registro');
             }
 
         } catch (error) {
-            console.error("Erro ao criar pedido:", error);
-            showToast('error', 'Erro', 'Falha ao criar pedido');
+            console.error("Erro ao criar registro:", error);
+            showToast('error', 'Erro', 'Falha ao criar registro');
         } finally {
             setLoading(false);
         }
@@ -182,9 +182,14 @@ export default function NewOrderPage() {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(
-                    {...newClient, address: newClient.address[0]}
+                    { ...newClient, address: newClient.address[0] }
                 ),
             });
+
+            if (response.status === 401) {
+                window.location.href = '/login';
+                throw new Error('Não autorizado - redirecionando para login');
+            }
 
             if (response.ok) {
                 showToast('success', 'Sucesso', 'Cliente criado com sucesso!');
@@ -197,11 +202,13 @@ export default function NewOrderPage() {
                     showToast
                 });
             } else {
-                throw new Error('Falha ao criar cliente');
+                const data = await response.json();
+                const errorMsg = data?.error || 'Falha ao criar cliente';
+                showToast('error', 'Erro', errorMsg);
+                throw new Error(errorMsg);
             }
         } catch (error) {
             console.error("Erro ao criar cliente:", error);
-            showToast('error', 'Erro', 'Falha ao criar cliente');
         }
     };
 
