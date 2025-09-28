@@ -3,6 +3,7 @@ const nextConfig = {
   // Permite acesso externo
   experimental: {
     externalDir: true,
+    serverComponentsExternalPackages: ['@prisma/client'],
   },
   // Configura CORS para desenvolvimento
   async headers() {
