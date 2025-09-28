@@ -63,18 +63,21 @@ const ProductDialog = ({
       [name]: val
     }));
 
-    // Calcular margem automaticamente se purchaseValue ou saleValue mudarem
-    if (name === 'purchaseValue' || name === 'saleValue') {
+    // Calcular margem automaticamente se purchaseValue ou margin mudarem
+    if (name === 'purchaseValue' || name === 'margin') {
       const purchase = name === 'purchaseValue' ? val : product.purchaseValue;
-      const sale = name === 'saleValue' ? val : product.saleValue;
+      const margin = name === 'margin' ? val : product.margin;
 
-      if (purchase > 0 && sale > 0) {
-        const margin = ((sale - purchase) / purchase) * 100;
-        setProduct(prev => ({
-          ...prev,
-          margin: Math.round(margin * 100) / 100 // Arredonda para 2 casas decimais
-        }));
+      let saleValue = 0;
+      if (purchase > 0 && margin > 0) {
+        saleValue = purchase * (1 + margin / 100);
+      } else if (purchase > 0) {
+        saleValue = purchase;
       }
+      setProduct(prev => ({
+        ...prev,
+        saleValue: Math.round(saleValue * 100) / 100 // Arredonda para 2 casas decimais
+      }));
     }
   };
 
@@ -107,35 +110,35 @@ const ProductDialog = ({
   };
 
 
-  
-const onImageSelect = (event: FileUploadSelectEvent) => {
-  const file = event.files[0];
-  if (file) {
-    setSelectedFile(file);
-    
-    // Mostrar preview (opcional)
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setProduct(prev => ({
-        ...prev,
-        image: e.target?.result as string
-      }));
-    };
-    reader.readAsDataURL(file);
-    
-    toast.current?.show({
-      severity: 'info',
-      summary: 'Imagem selecionada',
-      detail: 'Clique em salvar para fazer upload',
-      life: 3000
-    });
 
-    // Limpa a lista de arquivos do componente
-    if (fileUploadRef.current) {
-      fileUploadRef.current.clear();
+  const onImageSelect = (event: FileUploadSelectEvent) => {
+    const file = event.files[0];
+    if (file) {
+      setSelectedFile(file);
+
+      // Mostrar preview (opcional)
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setProduct(prev => ({
+          ...prev,
+          image: e.target?.result as string
+        }));
+      };
+      reader.readAsDataURL(file);
+
+      toast.current?.show({
+        severity: 'info',
+        summary: 'Imagem selecionada',
+        detail: 'Clique em salvar para fazer upload',
+        life: 3000
+      });
+
+      // Limpa a lista de arquivos do componente
+      if (fileUploadRef.current) {
+        fileUploadRef.current.clear();
+      }
     }
-  }
-};
+  };
 
   const onImageUpload = (event: import("primereact/fileupload").FileUploadHandlerEvent) => {
     // Esta função é chamada quando o upload é completado
@@ -148,7 +151,7 @@ const onImageSelect = (event: FileUploadSelectEvent) => {
           ...prev,
           image: e.target?.result as string
         }));
-        
+
         toast.current?.show({
           severity: 'success',
           summary: 'Imagem carregada',
@@ -175,11 +178,11 @@ const onImageSelect = (event: FileUploadSelectEvent) => {
       <div className="flex align-items-center flex-column">
         {product.image ? (
           <>
-            <img 
-              src={product.image} 
-              alt="Preview" 
-              width="100" 
-              className="shadow-2 mb-3" 
+            <img
+              src={product.image}
+              alt="Preview"
+              width="100"
+              className="shadow-2 mb-3"
               style={{ borderRadius: '4px' }}
             />
             <span className="text-primary font-bold">Imagem carregada</span>
@@ -321,7 +324,7 @@ const onImageSelect = (event: FileUploadSelectEvent) => {
 
         {/* Características Físicas */}
         <div className="formgrid grid">
-          
+
           <div className="field col">
             <label htmlFor="color">Cor*</label>
             <Dropdown
@@ -381,21 +384,22 @@ const onImageSelect = (event: FileUploadSelectEvent) => {
             )}
           </div>
           <div className="field col">
-            <label htmlFor="saleValue">Valor de Venda*</label>
+            <label htmlFor="margin">Margem (%)*</label>
             <InputNumber
-              id="saleValue"
-              value={product.saleValue}
-              onValueChange={(e) => onInputNumberChange(e, 'saleValue')}
-              mode="currency"
-              currency="BRL"
-              locale="pt-BR"
+              id="margin"
+              value={product.margin}
+              onValueChange={(e) => onInputNumberChange(e, 'margin')}
+              mode="decimal"
+              suffix="%"
+              min={0}
+              max={10000}
               required
               className={classNames({
-                'p-invalid': submitted && product.saleValue <= 0
+                'p-invalid': submitted && product.margin < 0
               })}
             />
-            {submitted && product.saleValue <= 0 && (
-              <small className="p-invalid">Valor de venda deve ser maior que zero.</small>
+            {submitted && product.margin < 0 && (
+              <small className="p-invalid">Margem não pode ser negativa.</small>
             )}
           </div>
         </div>
@@ -403,25 +407,24 @@ const onImageSelect = (event: FileUploadSelectEvent) => {
         {/* Margem e Quantidade */}
         <div className="formgrid grid">
           <div className="field col">
-            <label htmlFor="margin">Margem (%)</label>
+            <label htmlFor="saleValue">Valor de Venda</label>
             <InputNumber
-              id="margin"
-              value={product.margin}
-              mode="decimal"
-              suffix="%"
-              min={0}
-              max={10000}
+              id="saleValue"
+              value={product.saleValue}
+              mode="currency"
+              currency="BRL"
+              locale="pt-BR"
               disabled
               className="bg-gray-100 cursor-not-allowed"
               inputClassName={
-                product.margin > 0 
-                  ? 'text-green-600 text-bold' 
-                  : product.margin < 0 
+                product.saleValue > product.purchaseValue 
+                  ? 'text-green-600 font-bold' 
+                  : product.saleValue < product.purchaseValue 
                     ? 'text-red-600 font-bold' 
                     : 'text-gray-600 font-bold'
               }
             />
-            <small>Calculada automaticamente</small>
+            <small>Calculado automaticamente</small>
           </div>
           <div className="field col">
             <label htmlFor="quantity">Qntd. em Estoque*</label>
