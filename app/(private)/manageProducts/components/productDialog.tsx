@@ -1,6 +1,6 @@
 'use client';
 import { Dialog } from "primereact/dialog";
-import { Product } from "../page";
+import { Product, ProductVariation } from "../page";
 import { InputText } from "primereact/inputtext";
 import { InputNumber, InputNumberValueChangeEvent } from "primereact/inputnumber";
 import { classNames } from "primereact/utils";
@@ -9,7 +9,9 @@ import { FileUpload, FileUploadSelectEvent, FileUploadUploadEvent } from "primer
 import { Toast } from "primereact/toast";
 import { useRef, useEffect, useState } from "react";
 import { Dropdown, DropdownChangeEvent } from "primereact/dropdown";
+import { Button } from "primereact/button";
 import { CLOTHING_MATERIALS, COLOR_OPTIONS, JEWELRY_MATERIALS, PRODUCT_TYPES } from "./optionsSelect";
+import ProductVariations from "./ProductVariations";
 
 interface ProductDialogProps {
   productDialog: boolean,
@@ -30,7 +32,7 @@ const ProductDialog = ({
   hideDialog,
   productDialogFooter,
   setSelectedFile,
-  isEditMode
+  isEditMode = false
 }: ProductDialogProps) => {
   const toast = useRef<Toast>(null);
   const fileUploadRef = useRef<FileUpload>(null);
@@ -38,7 +40,6 @@ const ProductDialog = ({
 
   useEffect(() => {
     if (fileUploadRef.current) {
-      // Encontra o input file dentro do componente FileUpload
       const fileInput = fileUploadRef.current.getElement().querySelector('input[type="file"]');
       if (fileInput) {
         fileInput.setAttribute('capture', 'environment');
@@ -63,21 +64,17 @@ const ProductDialog = ({
       [name]: val
     }));
 
-    // Calcular margem automaticamente se purchaseValue ou margin mudarem
-    if (name === 'purchaseValue' || name === 'margin') {
+    if (name === 'purchaseValue' || name === 'saleValue') {
       const purchase = name === 'purchaseValue' ? val : product.purchaseValue;
-      const margin = name === 'margin' ? val : product.margin;
+      const sale = name === 'saleValue' ? val : product.saleValue;
 
-      let saleValue = 0;
-      if (purchase > 0 && margin > 0) {
-        saleValue = purchase * (1 + margin / 100);
-      } else if (purchase > 0) {
-        saleValue = purchase;
+      if (purchase > 0 && sale > 0) {
+        const margin = ((sale - purchase) / purchase) * 100;
+        setProduct(prev => ({
+          ...prev,
+          margin: Math.round(margin * 100) / 100
+        }));
       }
-      setProduct(prev => ({
-        ...prev,
-        saleValue: Math.round(saleValue * 100) / 100 // Arredonda para 2 casas decimais
-      }));
     }
   };
 
@@ -92,8 +89,8 @@ const ProductDialog = ({
     setProduct(prev => ({
       ...prev,
       color: e.value
-    }))
-  }
+    }));
+  };
 
   const onMaterialChange = (e: DropdownChangeEvent) => {
     setProduct(prev => ({
@@ -109,14 +106,11 @@ const ProductDialog = ({
     }));
   };
 
-
-
   const onImageSelect = (event: FileUploadSelectEvent) => {
     const file = event.files[0];
     if (file) {
       setSelectedFile(file);
-
-      // Mostrar preview (opcional)
+      
       const reader = new FileReader();
       reader.onload = (e) => {
         setProduct(prev => ({
@@ -125,7 +119,7 @@ const ProductDialog = ({
         }));
       };
       reader.readAsDataURL(file);
-
+      
       toast.current?.show({
         severity: 'info',
         summary: 'Imagem selecionada',
@@ -133,7 +127,6 @@ const ProductDialog = ({
         life: 3000
       });
 
-      // Limpa a lista de arquivos do componente
       if (fileUploadRef.current) {
         fileUploadRef.current.clear();
       }
@@ -141,7 +134,6 @@ const ProductDialog = ({
   };
 
   const onImageUpload = (event: import("primereact/fileupload").FileUploadHandlerEvent) => {
-    // Esta função é chamada quando o upload é completado
     const files = event.files;
     if (files && files.length > 0) {
       const file = files[0];
@@ -151,7 +143,7 @@ const ProductDialog = ({
           ...prev,
           image: e.target?.result as string
         }));
-
+        
         toast.current?.show({
           severity: 'success',
           summary: 'Imagem carregada',
@@ -161,7 +153,6 @@ const ProductDialog = ({
       };
       reader.readAsDataURL(file);
     }
-    // Finaliza o upload manualmente
     event.options && event.options.clear && event.options.clear();
   };
 
@@ -169,7 +160,39 @@ const ProductDialog = ({
     setProduct(prev => ({
       ...prev,
       type: e.value,
-      material: '' // Limpa o material quando mudar o tipo
+      material: ''
+    }));
+  };
+
+  // Funções para gerenciar variações (apenas no modo criação)
+  const addVariation = () => {
+    setProduct(prev => ({
+      ...prev,
+      variations: [
+        ...(prev.variations || []),
+        {
+          color: '',
+          size: '',
+          sizeNumber: 0,
+          quantity: 0
+        }
+      ]
+    }));
+  };
+
+  const removeVariation = (index: number) => {
+    setProduct(prev => ({
+      ...prev,
+      variations: prev.variations?.filter((_, i) => i !== index) || []
+    }));
+  };
+
+  const updateVariation = (index: number, field: keyof ProductVariation, value: any) => {
+    setProduct(prev => ({
+      ...prev,
+      variations: prev.variations?.map((variation, i) => 
+        i === index ? { ...variation, [field]: value } : variation
+      ) || []
     }));
   };
 
@@ -178,11 +201,11 @@ const ProductDialog = ({
       <div className="flex align-items-center flex-column">
         {product.image ? (
           <>
-            <img
-              src={product.image}
-              alt="Preview"
-              width="100"
-              className="shadow-2 mb-3"
+            <img 
+              src={product.image} 
+              alt="Preview" 
+              width="100" 
+              className="shadow-2 mb-3" 
               style={{ borderRadius: '4px' }}
             />
             <span className="text-primary font-bold">Imagem carregada</span>
@@ -197,12 +220,120 @@ const ProductDialog = ({
     );
   };
 
-  // Função para customizar o botão de escolha com ícone de câmera
   const chooseOptions = {
     label: 'Selecionar',
     icon: 'pi pi-fw pi-images',
     className: 'p-button-primary'
   };
+
+  const sizeOptions = ['PP', 'P', 'M', 'G', 'GG', 'XG', 'XGG'].map(size => ({ 
+    label: size, value: size 
+  }));
+
+  // Componente para renderizar campos normais (modo edição)
+  const renderNormalFields = () => (
+    <>
+      {/* Tamanhos */}
+      <div className="formgrid grid">
+        <div className="field col">
+          <label htmlFor="size">Tamanho*</label>
+          <Dropdown
+            id="size"
+            value={product.size}
+            options={sizeOptions}
+            onChange={onSizeChange}
+            placeholder="Selecione um tamanho"
+            required
+            className={classNames({
+              'w-auto': true,
+              'p-invalid': submitted && !product.size
+            })}
+          />
+          {submitted && !product.size && <small className="p-invalid">Tamanho é obrigatório.</small>}
+        </div>
+        <div className="field col">
+          <label htmlFor="sizeNumber">Tamanho Numérico*</label>
+          <InputNumber
+            id="sizeNumber"
+            value={product.sizeNumber}
+            onValueChange={(e) => onInputNumberChange(e, 'sizeNumber')}
+            min={0}
+            required
+            className={classNames({
+              'p-invalid': submitted && product.sizeNumber <= 0
+            })}
+          />
+          {submitted && !product.sizeNumber && <small className="p-invalid">Tamanho numérico é obrigatório.</small>}
+        </div>
+      </div>
+
+      {/* Características Físicas */}
+      <div className="formgrid grid">
+        <div className="field col">
+          <label htmlFor="color">Cor*</label>
+          <Dropdown
+            id="color"
+            value={product.color}
+            options={COLOR_OPTIONS}
+            onChange={onColorChange}
+            placeholder="Selecione uma cor"
+            filter
+            filterBy="label"
+            required
+            className={classNames({
+              'p-invalid': submitted && !product.color
+            })}
+          />
+          {submitted && !product.color && <small className="p-invalid">Cor é obrigatória.</small>}
+        </div>
+        <div className="field col">
+          <label htmlFor="material">Material*</label>
+          <Dropdown
+            id="material"
+            value={product.material}
+            options={getMaterialOptions(product.type)}
+            onChange={onMaterialChange}
+            placeholder="Selecione um material"
+            filter
+            disabled={!product.type}
+            required
+            className={classNames({
+              'p-invalid': submitted && !product.material
+            })}
+          />
+          {submitted && !product.material && <small className="p-invalid">Material é obrigatório.</small>}
+          {!product.type && <small className="p-invalid">Selecione o tipo de produto primeiro.</small>}
+        </div>
+      </div>
+
+      {/* Quantidade */}
+      <div className="field">
+        <label htmlFor="quantity">Qntd. em Estoque*</label>
+        <InputNumber
+          id="quantity"
+          value={product.quantity}
+          onValueChange={(e) => onInputNumberChange(e, 'quantity')}
+          min={0}
+          required
+          className={classNames({
+            'p-invalid': submitted && product.quantity < 0
+          })}
+        />
+        {submitted && product.quantity < 0 && (
+          <small className="p-invalid">Quantidade não pode ser negativa.</small>
+        )}
+      </div>
+    </>
+  );
+
+  // Componente para renderizar variações (modo criação)
+  const renderVariations = () => (
+    <ProductVariations 
+      product={product}
+      setProduct={setProduct}
+      submitted={submitted}
+    />
+  );
 
   return (
     <>
@@ -210,7 +341,7 @@ const ProductDialog = ({
       <Dialog
         visible={productDialog}
         style={{ width: '600px' }}
-        header="Detalhes do Produto"
+        header={isEditMode ? "Editar Produto" : "Detalhes do Produto"}
         modal
         className="p-fluid"
         footer={productDialogFooter}
@@ -232,7 +363,7 @@ const ProductDialog = ({
             {submitted && !product.name && <small className="p-invalid">Nome é obrigatório.</small>}
           </div>
 
-          <div className="field">
+          <div className="field col">
             <label htmlFor="type">Tipo de Produto*</label>
             <Dropdown
               id="type"
@@ -289,81 +420,27 @@ const ProductDialog = ({
           />
         </div>
 
-        <div className="formgrid grid">
-          <div className="field col">
-            <label htmlFor="size">Tamanho*</label>
-            <Dropdown
-              id="size"
-              value={product.size}
-              options={['PP', 'P', 'M', 'G', 'GG', 'XG', 'XGG'].map(size => ({ label: size, value: size }))}
-              onChange={onSizeChange}
-              placeholder="Selecione um tamanho"
-              required
-              className={classNames({
-                'w-auto': true,
-                'p-invalid': submitted && !product.size
-              })}
-            />
-            {submitted && !product.size && <small className="p-invalid">Tamanho é obrigatório.</small>}
-          </div>
-          <div className="field col">
-            <label htmlFor="sizeNumber">Tamanho Numerico*</label>
-            <InputNumber
-              id="sizeNumber"
-              value={product.sizeNumber}
-              onValueChange={(e) => onInputNumberChange(e, 'sizeNumber')}
-              min={0}
-              required
-              className={classNames({
-                'p-invalid': submitted && product.sizeNumber <= 0
-              })}
-            />
-            {submitted && !product.sizeNumber && <small className="p-invalid">Tamanho numérico é obrigatório.</small>}
-          </div>
+        {/* Material */}
+        <div className="field">
+          <label htmlFor="material">Material*</label>
+          <Dropdown
+            id="material"
+            value={product.material}
+            options={getMaterialOptions(product.type)}
+            onChange={onMaterialChange}
+            placeholder="Selecione um material"
+            filter
+            disabled={!product.type}
+            required
+            className={classNames({
+              'p-invalid': submitted && !product.material
+            })}
+          />
+          {submitted && !product.material && <small className="p-invalid">Material é obrigatório.</small>}
+          {!product.type && <small className="p-invalid">Selecione o tipo de produto primeiro.</small>}
         </div>
 
-        {/* Características Físicas */}
-        <div className="formgrid grid">
-
-          <div className="field col">
-            <label htmlFor="color">Cor*</label>
-            <Dropdown
-              id="color"
-              value={product.color}
-              options={COLOR_OPTIONS}
-              onChange={onColorChange}
-              placeholder="Selecione uma cor"
-              filter
-              filterBy="label"
-              required
-              className={classNames({
-                'p-invalid': submitted && !product.color
-              })}
-
-            />
-            {submitted && !product.color && <small className="p-invalid">Cor é obrigatória.</small>}
-          </div>
-          <div className="field col">
-            <label htmlFor="material">Material*</label>
-            <Dropdown
-              id="material"
-              value={product.material}
-              options={getMaterialOptions(product.type)}
-              onChange={onMaterialChange}
-              placeholder="Selecione um material"
-              filter
-              disabled={!product.type}
-              required
-              className={classNames({
-                'p-invalid': submitted && !product.material
-              })}
-            />
-            {submitted && !product.material && <small className="p-invalid">Material é obrigatório.</small>}
-            {!product.type && <small className="p-invalid">Selecione o tipo de produto primeiro.</small>}
-          </div>
-        </div>
-
-        {/* Valores e Quantidade */}
+        {/* Valores */}
         <div className="formgrid grid">
           <div className="field col">
             <label htmlFor="purchaseValue">Valor de Compra*</label>
@@ -384,75 +461,59 @@ const ProductDialog = ({
             )}
           </div>
           <div className="field col">
-            <label htmlFor="margin">Margem (%)*</label>
-            <InputNumber
-              id="margin"
-              value={product.margin}
-              onValueChange={(e) => onInputNumberChange(e, 'margin')}
-              mode="decimal"
-              suffix="%"
-              min={0}
-              max={10000}
-              required
-              className={classNames({
-                'p-invalid': submitted && product.margin < 0
-              })}
-            />
-            {submitted && product.margin < 0 && (
-              <small className="p-invalid">Margem não pode ser negativa.</small>
-            )}
-          </div>
-        </div>
-
-        {/* Margem e Quantidade */}
-        <div className="formgrid grid">
-          <div className="field col">
-            <label htmlFor="saleValue">Valor de Venda</label>
+            <label htmlFor="saleValue">Valor de Venda*</label>
             <InputNumber
               id="saleValue"
               value={product.saleValue}
+              onValueChange={(e) => onInputNumberChange(e, 'saleValue')}
               mode="currency"
               currency="BRL"
               locale="pt-BR"
-              disabled
-              className="bg-gray-100 cursor-not-allowed"
-              inputClassName={
-                product.saleValue > product.purchaseValue 
-                  ? 'text-green-600 font-bold' 
-                  : product.saleValue < product.purchaseValue 
-                    ? 'text-red-600 font-bold' 
-                    : 'text-gray-600 font-bold'
-              }
-            />
-            <small>Calculado automaticamente</small>
-          </div>
-          <div className="field col">
-            <label htmlFor="quantity">Qntd. em Estoque*</label>
-            <InputNumber
-              id="quantity"
-              value={product.quantity}
-              onValueChange={(e) => onInputNumberChange(e, 'quantity')}
-              min={0}
               required
               className={classNames({
-                'p-invalid': submitted && product.quantity < 0
+                'p-invalid': submitted && product.saleValue <= 0
               })}
-              disabled={isEditMode || false}
             />
-            {submitted && product.quantity < 0 && (
-              <small className="p-invalid">Quantidade não pode ser negativa.</small>
+            {submitted && product.saleValue <= 0 && (
+              <small className="p-invalid">Valor de venda deve ser maior que zero.</small>
             )}
           </div>
         </div>
 
-        {/* Upload de Imagem - Movido para o final */}
+        {/* Margem */}
+        <div className="field">
+          <label htmlFor="margin">Margem (%)</label>
+          <InputNumber
+            id="margin"
+            value={product.margin}
+            mode="decimal"
+            suffix="%"
+            min={0}
+            max={10000}
+            disabled
+            className="bg-gray-100 cursor-not-allowed"
+            inputClassName={
+              product.margin > 0 
+                ? 'text-green-600 text-bold' 
+                : product.margin < 0 
+                  ? 'text-red-600 font-bold' 
+                  : 'text-gray-600 font-bold'
+            }
+          />
+          <small>Calculada automaticamente</small>
+        </div>
+
+        {/* Campos Normais (Edição) ou Variações (Criação) */}
+        {isEditMode ? renderNormalFields() : renderVariations()}
+
+        {/* Upload de Imagem */}
         <div className="field mt-4">
           <label htmlFor="image">Imagem do Produto</label>
           <FileUpload
             ref={fileUploadRef}
             name="image"
             accept="image/*"
-            maxFileSize={10000000} // 10MB
+            maxFileSize={10000000}
             onSelect={onImageSelect}
             customUpload={true}
             uploadHandler={onImageUpload}

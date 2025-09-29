@@ -6,7 +6,7 @@ import { Toast } from 'primereact/toast';
 import { Toolbar } from 'primereact/toolbar';
 import React, { useEffect, useRef, useState } from 'react';
 import ProductDialog from './components/productDialog';
-import { saveProduct } from './services/saveProduct';
+import { saveProduct, saveProductWithVariations } from './services/saveProduct';
 import ProductsTable from './components/ProductsTable';
 import { updateProduct } from './services/updateProduct';
 import { deleteProduct } from './services/deleteProduct';
@@ -32,6 +32,16 @@ export interface Product {
     code: string
     createdAt: string;
     updatedAt: string;
+    variations?: ProductVariation[];
+}
+
+export interface ProductVariation {
+  id?: string;
+  color: string;
+  size: string;
+  sizeNumber: number;
+  quantity: number;
+  sku?: string;
 }
 
 
@@ -136,7 +146,29 @@ const ManageProductPage = () => {
     const productDialogFooter = (
         <>
             <Button label="Cancelar" icon="pi pi-times" text onClick={hideDialog} />
-            <Button label="Salvar" icon="pi pi-check" text onClick={()=> saveProduct(product, selectedFile, setSubmitted, fetchProducts, hideDialog, toast)} />
+            <Button label="Salvar" icon="pi pi-check" text onClick={()=> {
+                if (product.variations && product.variations.length > 0) {
+      // Se tem variações, usa a função nova
+      saveProductWithVariations(
+        product,
+        selectedFile,
+        setSubmitted,
+        fetchProducts,
+        hideDialog,
+        toast
+      );
+    } else {
+      // Se não tem variações, usa a função original (para compatibilidade)
+      saveProduct(
+        product,
+        selectedFile,
+        setSubmitted,
+        fetchProducts,
+        hideDialog,
+        toast
+      );
+    }
+            }} />
         </>
     );
     const editProductDialogFooter = (
