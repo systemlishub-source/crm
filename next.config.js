@@ -1,11 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Permite acesso externo
   experimental: {
-    externalDir: true,
-    serverComponentsExternalPackages: ['@prisma/client'],
+    serverComponentsExternalPackages: ['@prisma/client', '@prisma/accelerate'],
   },
-  // Configura CORS para desenvolvimento
+  
   async headers() {
     return [
       {
@@ -17,6 +15,13 @@ const nextConfig = {
         ],
       },
     ]
+  },
+  
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.externals.push('@prisma/client')
+    }
+    return config
   },
 }
 

@@ -4,7 +4,12 @@
   "buildCommand": "pnpm run build",
   "functions": {
     "app/api/**/*.ts": {
-      "maxDuration": 30
+      "maxDuration": 30,
+      "memory": 1024
     }
+  },
+  "env": {
+    "PRISMA_CLI_QUERY_ENGINE_TYPE": "binary",
+    "PRISMA_CLIENT_ENGINE_TYPE": "binary"
   }
 }

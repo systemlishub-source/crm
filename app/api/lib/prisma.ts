@@ -1,7 +1,30 @@
-import { PrismaClient } from "@prisma/client";
+// lib/prisma.ts
+import { PrismaClient } from '@prisma/client'
 
-const globalForPrisma = global as unknown as { prisma?: PrismaClient };
+const prismaClientSingleton = () => {
+  return new PrismaClient({
+    // Configurações para evitar prepared statements conflicts
+    log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
+    transactionOptions: {
+      maxWait: 5000,
+      timeout: 10000,
+    },
+  })
+}
 
-export const prisma = globalForPrisma.prisma || new PrismaClient();
+declare global {
+  var prismaGlobal: undefined | ReturnType<typeof prismaClientSingleton>
+}
 
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+const prisma = globalThis.prismaGlobal ?? prismaClientSingleton()
+
+export default prisma
+
+if (process.env.NODE_ENV !== 'production') {
+  globalThis.prismaGlobal = prisma
+}
+
+// Adicione um handler para graceful shutdown
+process.on('beforeExit', async () => {
+  await prisma.$disconnect()
+})
