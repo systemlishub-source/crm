@@ -10,7 +10,7 @@ import { Toast } from "primereact/toast";
 import { useRef, useEffect, useState } from "react";
 import { Dropdown, DropdownChangeEvent } from "primereact/dropdown";
 import { Button } from "primereact/button";
-import { CLOTHING_MATERIALS, COLOR_OPTIONS, JEWELRY_MATERIALS, PRODUCT_TYPES } from "./optionsSelect";
+import { CLOTHING_MATERIALS, JEWELRY_MATERIALS, PRODUCT_TYPES } from "./optionsSelect";
 import ProductVariations from "./ProductVariations";
 
 interface ProductDialogProps {
@@ -271,19 +271,15 @@ const ProductDialog = ({
       <div className="formgrid grid">
         <div className="field col">
           <label htmlFor="color">Cor*</label>
-          <Dropdown
-            id="color"
-            value={product.color}
-            options={COLOR_OPTIONS}
-            onChange={onColorChange}
-            placeholder="Selecione uma cor"
-            filter
-            filterBy="label"
-            required
-            className={classNames({
-              'p-invalid': submitted && !product.color
-            })}
-          />
+
+          <InputText
+              id="color" 
+              value={product.color}
+              onChange={(e) => onInputChange(e, 'color')}
+              className={classNames({
+                'p-invalid': submitted && !product.color
+              })}
+            />
           {submitted && !product.color && <small className="p-invalid">Cor é obrigatória.</small>}
         </div>
         <div className="field col">

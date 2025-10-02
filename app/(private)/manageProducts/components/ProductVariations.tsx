@@ -4,8 +4,7 @@ import { InputNumber, InputNumberValueChangeEvent } from 'primereact/inputnumber
 import { Dropdown, DropdownChangeEvent } from 'primereact/dropdown';
 import { classNames } from 'primereact/utils';
 import { Product, ProductVariation } from '../page';
-import { COLOR_OPTIONS } from './optionsSelect';
-
+import { InputText } from 'primereact/inputtext';
 interface ProductVariationsProps {
   product: Product;
   setProduct: React.Dispatch<React.SetStateAction<Product>>;
@@ -77,18 +76,16 @@ const ProductVariations = ({ product, setProduct, submitted }: ProductVariations
           <div className="formgrid grid">
             <div className="field col-6">
               <label htmlFor={`color-${index}`} className="font-medium">Cor*</label>
-              <Dropdown
+              <InputText
                 id={`color-${index}`}
                 value={variation.color}
-                options={COLOR_OPTIONS}
-                onChange={(e: DropdownChangeEvent) => updateVariation(index, 'color', e.value)}
+                onChange={(e) => updateVariation(index, 'color', e.target.value)}
                 placeholder="Selecione uma cor"
-                filter
-                required
-                className={classNames('w-full', {
+                className={classNames({
                   'p-invalid': submitted && !variation.color
                 })}
               />
+
               {submitted && !variation.color && (
                 <small className="p-invalid">Cor é obrigatória.</small>
               )}
