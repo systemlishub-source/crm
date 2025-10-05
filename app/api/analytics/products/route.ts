@@ -266,7 +266,20 @@ export async function GET(request: Request) {
       }
     })
 
-    const totalStockValueCalc = (totalPurchaseValue._sum.purchaseValue || 0) * (totalStockValue._sum.quantity || 0)
+    // CORREÇÃO: Buscar o valor total do estoque calculando (purchaseValue * quantity) para cada produto
+
+    const productsForStockValue = await prisma.products.findMany({
+      where: { status: 1 },
+      select: {
+        purchaseValue: true,
+        quantity: true
+      }
+    })
+
+    // Calcular o valor total do estoque somando (purchaseValue * quantity) de cada produto
+    const totalStockValueCalc = productsForStockValue.reduce((total, product) => {
+      return total + (product.purchaseValue * product.quantity)
+    }, 0)
 
     return NextResponse.json({
       profitMargin: profitMarginData,
