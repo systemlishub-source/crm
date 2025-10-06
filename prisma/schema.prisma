@@ -60,7 +60,7 @@ model passwordReset {
   userId    String
   token     String   @unique
   expiresAt DateTime
-  user      Users    @relation(fields: [userId], references: [id])
+  user      Users    @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Products {
