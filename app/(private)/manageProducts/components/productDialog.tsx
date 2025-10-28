@@ -160,7 +160,6 @@ const ProductDialog = ({
     setProduct(prev => ({
       ...prev,
       type: e.value,
-      material: ''
     }));
   };
 
@@ -284,19 +283,14 @@ const ProductDialog = ({
         </div>
         <div className="field col">
           <label htmlFor="material">Material*</label>
-          <Dropdown
-            id="material"
-            value={product.material}
-            options={getMaterialOptions(product.type)}
-            onChange={onMaterialChange}
-            placeholder="Selecione um material"
-            filter
-            disabled={!product.type}
-            required
-            className={classNames({
-              'p-invalid': submitted && !product.material
-            })}
-          />
+          <InputText
+              id="material" 
+              value={product.material}
+              onChange={(e) => onInputChange(e, 'material')}
+              className={classNames({
+                'p-invalid': submitted && !product.material
+              })}
+            />
           {submitted && !product.material && <small className="p-invalid">Material é obrigatório.</small>}
           {!product.type && <small className="p-invalid">Selecione o tipo de produto primeiro.</small>}
         </div>
@@ -419,19 +413,14 @@ const ProductDialog = ({
         {/* Material */}
         <div className="field">
           <label htmlFor="material">Material*</label>
-          <Dropdown
-            id="material"
-            value={product.material}
-            options={getMaterialOptions(product.type)}
-            onChange={onMaterialChange}
-            placeholder="Selecione um material"
-            filter
-            disabled={!product.type}
-            required
-            className={classNames({
-              'p-invalid': submitted && !product.material
-            })}
-          />
+          <InputText
+              id="material" 
+              value={product.material}
+              onChange={(e) => onInputChange(e, 'material')}
+              className={classNames({
+                'p-invalid': submitted && !product.material
+              })}
+            />
           {submitted && !product.material && <small className="p-invalid">Material é obrigatório.</small>}
           {!product.type && <small className="p-invalid">Selecione o tipo de produto primeiro.</small>}
         </div>
