@@ -63,7 +63,7 @@ export default function OrdersPage() {
                         />
                     </div>
 
-                    <OrdersTable orders={orders} loading={loading} />
+                    <OrdersTable orders={orders} loading={loading} onOrderDeleted={fetchOrders}/>
 
                     <div className="mt-4 flex justify-content-between align-items-center">
                         <span className="text-xs md:text-sm text-500">

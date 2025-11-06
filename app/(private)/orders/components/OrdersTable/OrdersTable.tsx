@@ -11,19 +11,25 @@ import { FilterMatchMode } from "primereact/api";
 import { Dialog } from "primereact/dialog";
 import { Card } from "primereact/card";
 import { Divider } from "primereact/divider";
+import { Toast } from "primereact/toast";
 import DetailOrder from "./DetailOrder";
 
 interface OrdersTableProps {
     orders: Order[];
     loading?: boolean;
+    onOrderDeleted?: () => void; // Adicione esta prop para atualizar a lista
 }
 
-export default function OrdersTable({ orders, loading = false }: OrdersTableProps) {
+export default function OrdersTable({ orders, loading = false, onOrderDeleted }: OrdersTableProps) {
     const dt = useRef<DataTable<any>>(null);
+    const toast = useRef<Toast>(null);
     const [selectedOrders, setSelectedOrders] = useState(null);
     const [globalFilter, setGlobalFilter] = useState('');
     const [visible, setVisible] = useState(false);
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+    const [deleteDialogVisible, setDeleteDialogVisible] = useState(false);
+    const [orderToDelete, setOrderToDelete] = useState<Order | null>(null);
+    const [deleting, setDeleting] = useState(false);
     
     const [filters, setFilters] = useState({
         global: { value: '', matchMode: FilterMatchMode.CONTAINS }
@@ -34,7 +40,7 @@ export default function OrdersTable({ orders, loading = false }: OrdersTableProp
         let _filters = { ...filters };
         _filters['global'].value = value;
         setFilters(_filters);
-        setGlobalFilter(value); // Atualiza também o filtro mobile
+        setGlobalFilter(value);
     };
 
     // Filtra os vendas para a visualização mobile
@@ -112,25 +118,94 @@ export default function OrdersTable({ orders, loading = false }: OrdersTableProp
 
     const actionBodyTemplate = (rowData: Order) => {
         return (
-            <Button
-                icon="pi pi-eye"
-                className="p-button-sm p-button-text p-button-rounded md:p-button-outlined"
-                tooltip="Ver detalhes da venda"
-                tooltipOptions={{ position: 'top' }}
-                onClick={() => showOrderDetails(rowData)}
-            />
+            <>
+                <Button
+                    icon="pi pi-eye"
+                    className="p-button-sm p-button-text p-button-rounded md:p-button-outlined"
+                    tooltip="Ver detalhes da venda"
+                    tooltipOptions={{ position: 'top' }}
+                    onClick={() => showOrderDetails(rowData)}
+                />
+                <Button
+                    icon="pi pi-trash"
+                    className="p-button-sm p-button-text p-button-rounded md:p-button-outlined p-button-danger"
+                    tooltip="Excluir venda"
+                    tooltipOptions={{ position: 'top' }}
+                    onClick={() => confirmDeleteOrder(rowData)}
+                />
+            </>
         );
     };
 
     const showOrderDetails = (order: Order) => {
-       setSelectedOrder(order)
-       setVisible(true)
-    }
+        setSelectedOrder(order);
+        setVisible(true);
+    };
 
     const hideOrderDetails = () => {
-       setSelectedOrder(null)
-       setVisible(false)
-    }
+        setSelectedOrder(null);
+        setVisible(false);
+    };
+
+    const confirmDeleteOrder = (order: Order) => {
+        setOrderToDelete(order);
+        setDeleteDialogVisible(true);
+    };
+
+    const hideDeleteDialog = () => {
+        setDeleteDialogVisible(false);
+        setOrderToDelete(null);
+    };
+
+    const deleteOrder = async () => {
+        if (!orderToDelete) return;
+
+        setDeleting(true);
+        try {
+            const response = await fetch(`/api/orders/${orderToDelete.id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Erro ao excluir ordem');
+            }
+
+            toast.current?.show({
+                severity: 'success',
+                summary: 'Sucesso',
+                detail: 'Venda excluída com sucesso!',
+                life: 3000
+            });
+
+            // Fecha o dialog de exclusão
+            hideDeleteDialog();
+            
+            // Fecha o dialog de detalhes se estiver aberto
+            if (selectedOrder?.id === orderToDelete.id) {
+                hideOrderDetails();
+            }
+
+            // Atualiza a lista chamando a função do parent
+            if (onOrderDeleted) {
+                onOrderDeleted();
+            }
+
+        } catch (error) {
+            console.error('Erro ao excluir venda:', error);
+            toast.current?.show({
+                severity: 'error',
+                summary: 'Erro',
+                detail: error instanceof Error ? error.message : 'Erro ao excluir venda',
+                life: 3000
+            });
+        } finally {
+            setDeleting(false);
+        }
+    };
 
     // Template para visualização mobile
     const mobileRowTemplate = (rowData: Order) => {
@@ -159,20 +234,80 @@ export default function OrdersTable({ orders, loading = false }: OrdersTableProp
                     <span className="font-bold text-blue-600 text-sm">
                         R$ {rowData.total.toFixed(2)}
                     </span>
-                    <Button
-                        icon="pi pi-eye"
-                        className="p-button-sm p-button-text p-button-rounded"
-                        onClick={() => showOrderDetails(rowData)}
-                    />
+                    <div className="flex gap-1">
+                        <Button
+                            icon="pi pi-eye"
+                            className="p-button-sm p-button-text p-button-rounded"
+                            onClick={() => showOrderDetails(rowData)}
+                        />
+                        <Button
+                            icon="pi pi-trash"
+                            className="p-button-sm p-button-text p-button-rounded p-button-danger"
+                            onClick={() => confirmDeleteOrder(rowData)}
+                        />
+                    </div>
                 </div>
             </div>
         );
     };
 
-    
+    // Footer do dialog de exclusão
+    const deleteDialogFooter = (
+        <div className="flex justify-content-end gap-2">
+            <Button
+                label="Cancelar"
+                icon="pi pi-times"
+                onClick={hideDeleteDialog}
+                className="p-button-text"
+                disabled={deleting}
+            />
+            <Button
+                label="Excluir"
+                icon="pi pi-trash"
+                onClick={deleteOrder}
+                className="p-button-danger"
+                loading={deleting}
+            />
+        </div>
+    );
 
     return (
         <div>
+            <Toast ref={toast} position="top-right" />
+            
+            {/* Dialog de Confirmação de Exclusão */}
+            <Dialog
+                visible={deleteDialogVisible}
+                style={{ width: '450px' }}
+                header="Confirmar Exclusão"
+                modal
+                footer={deleteDialogFooter}
+                onHide={hideDeleteDialog}
+                className="p-fluid"
+            >
+                <div className="flex align-items-center gap-3">
+                    <i 
+                        className="pi pi-exclamation-triangle text-red-500" 
+                        style={{ fontSize: '2rem' }} 
+                    />
+                    <div>
+                        <span>
+                            Tem certeza que deseja excluir a venda <strong>#{orderToDelete?.id}</strong>?
+                            <br />
+                            <br />
+                            <strong>Cliente:</strong> {orderToDelete?.client.name}
+                            <br />
+                            <strong>Total:</strong> R$ {orderToDelete?.total.toFixed(2)}
+                            <br />
+                            <strong>Data:</strong> {orderToDelete && new Date(orderToDelete.purchaseDate).toLocaleDateString('pt-BR')}
+                            <br />
+                            <br />
+                            <strong className="text-red-500">Esta ação não pode ser desfeita!</strong>
+                        </span>
+                    </div>
+                </div>
+            </Dialog>
+
             {/* Visualização desktop */}
             <div className="hidden md:block">
                 <DataTable
@@ -244,8 +379,8 @@ export default function OrdersTable({ orders, loading = false }: OrdersTableProp
                         header="Ações" 
                         body={actionBodyTemplate} 
                         align="center"
-                        style={{ width: '80px' }}
-                        headerStyle={{ minWidth: '80px' }}
+                        style={{ width: '120px' }}
+                        headerStyle={{ minWidth: '120px' }}
                     />
                 </DataTable>
             </div>

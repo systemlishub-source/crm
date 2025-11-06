@@ -21,14 +21,16 @@ export default function DetailOrder({
 
     const orderModalFooter = (
         <div className="flex justify-content-end">
-            <Button 
-                label="Fechar" 
-                icon="pi pi-times" 
-                onClick={hideOrderDetails} 
-                className="p-button-text" 
+            <Button
+                label="Fechar"
+                icon="pi pi-times"
+                onClick={hideOrderDetails}
+                className="p-button-text"
             />
         </div>
     );
+
+    const hasDiscount = selectedOrder?.discount && selectedOrder.discount > 0;
 
     // Layout mobile simplificado
     const renderMobileView = () => (
@@ -41,9 +43,9 @@ export default function DetailOrder({
                         {selectedOrder && new Date(selectedOrder.purchaseDate).toLocaleDateString('pt-BR')}
                     </span>
                 </div>
-                <Tag 
-                    value={`${selectedOrder?.orderItems.length} itens`} 
-                    severity="info" 
+                <Tag
+                    value={`${selectedOrder?.orderItems.length} itens`}
+                    severity="info"
                 />
             </div>
 
@@ -87,7 +89,7 @@ export default function DetailOrder({
                     <i className="pi pi-shopping-cart mr-2 text-primary"></i>
                     <h4 className="m-0 text-base">Itens da Venda</h4>
                 </div>
-                
+
                 {selectedOrder?.orderItems.map((item, index) => (
                     item.product.status === 1 ? (
                         <div key={item.id} className="mb-3 pb-2 border-bottom-1 surface-border">
@@ -135,11 +137,30 @@ export default function DetailOrder({
 
                 <Divider className="my-2" />
 
-                <div className="flex justify-content-between align-items-center font-bold">
-                    <span>Total:</span>
-                    <span className="text-lg text-blue-600">
-                        R$ {selectedOrder?.total.toFixed(2)}
-                    </span>
+                {/* RESUMO DE VALORES - ATUALIZADO */}
+                
+                <div className="space-y-2">
+                    <div className="flex justify-content-between text-sm">
+                        <span>Subtotal:</span>
+                        <span>R$ {selectedOrder?.subtotal.toFixed(2)}</span>
+                    </div>
+
+                    {selectedOrder?.discount && (
+                        <>
+                            <div className="flex justify-content-between text-sm text-red-500">
+                                <span>Desconto ({selectedOrder.discount}%):</span>
+                                <span>- R$ {selectedOrder?.discountAmount.toFixed(2)}</span>
+                            </div>
+                            <Divider className="my-1" />
+                        </>
+                    )}
+
+                    <div className="flex justify-content-between align-items-center font-bold text-lg">
+                        <span>Total Final:</span>
+                        <span className="text-blue-600">
+                            R$ {selectedOrder?.total.toFixed(2)}
+                        </span>
+                    </div>
                 </div>
             </Card>
 
@@ -196,9 +217,9 @@ export default function DetailOrder({
                         <div className="col-2 text-center">Qntd.</div>
                         <div className="col-3 text-right">Preço Unitário</div>
                     </div>
-                    
+
                     <Divider />
-                    
+
                     {selectedOrder?.orderItems.map((item, index) => (
                         item.product.status === 1 ? (
                             <div key={item.id} className="grid mb-2">
@@ -220,11 +241,37 @@ export default function DetailOrder({
                             </div>
                         )
                     ))}
-                    
+
                     <Divider />
-                    
-                    <div className="grid font-bold">
-                        <div className="col-9 text-right">Total:</div>
+
+                    {/* RESUMO DE VALORES - ATUALIZADO */}
+                    {
+                        hasDiscount && (
+                            <div className="space-y-2">
+                                <div className="grid text-sm">
+                                    <div className="col-9 text-right">Subtotal:</div>
+                                    <div className="col-3 text-right">
+                                        R$ {selectedOrder?.subtotal.toFixed(2)}
+                                    </div>
+                                </div>
+
+                                {selectedOrder?.discount && (
+                                    <div className="grid text-sm text-red-500">
+                                        <div className="col-9 text-right">
+                                            Desconto ({selectedOrder.discount}%):
+                                        </div>
+                                        <div className="col-3 text-right">
+                                            - R$ {selectedOrder?.discountAmount.toFixed(2)}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                            
+                        )
+                    }
+
+                    <div className="grid font-bold text-lg">
+                        <div className="col-9 text-right">Total Final:</div>
                         <div className="col-3 text-right text-blue-600">
                             R$ {selectedOrder?.total.toFixed(2)}
                         </div>

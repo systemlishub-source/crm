@@ -70,8 +70,8 @@ export interface Order {
         };
     }>;
     total: number;
-    subtotal: number; // Adicione se quiser
-    discountAmount: number; // Adicione se quiser
+    subtotal: number; 
+    discountAmount: number; 
 }
 
 export interface OrderFormData {
