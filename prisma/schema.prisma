@@ -115,6 +115,7 @@ model Order {
 
   purchaseDate DateTime @default(now())
   notes        String?
+  discount     Float    @default(0)
 
   orderItems OrderItem[]
 }
