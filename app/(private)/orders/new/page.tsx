@@ -14,6 +14,7 @@ import NotesSection from "../components/NotesSection/NotesSection";
 import { fetchClientsProducts } from "../services/fetchClientsProducts";
 import { Client } from "../../clients/types";
 import { Toolbar } from "primereact/toolbar";
+import DiscountSection from "./DiscountSection";
 
 const emptyClient: Client = {
     id: '',
@@ -52,6 +53,7 @@ export default function NewOrderPage() {
     const [clientDialog, setClientDialog] = useState<boolean>(false);
     const [newClient, setNewClient] = useState<Client>(emptyClient);
     const [submitted, setSubmitted] = useState<boolean>(false);
+    const [discount, setDiscount] = useState<number>(0);
 
     
     useEffect(() => {
@@ -128,8 +130,14 @@ export default function NewOrderPage() {
         }
     };
 
-    const calculateTotal = () => {
+    const calculateSubtotal = () => {
         return orderItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+    };
+
+    const calculateTotal = () => {
+        const subtotal = calculateSubtotal();
+        const discountAmount = subtotal * (discount / 100);
+        return subtotal - discountAmount;
     };
 
     const createOrder = async () => {
@@ -149,6 +157,7 @@ export default function NewOrderPage() {
             const orderData = {
                 clientId: selectedClient.id,
                 notes: notes,
+                discount: discount,
                 orderItems: orderItems.map(item => ({
                     productId: item.productId,
                     quantity: item.quantity
@@ -266,6 +275,13 @@ export default function NewOrderPage() {
                             <NotesSection
                                 notes={notes}
                                 onNotesChange={setNotes}
+                                loading={loading}
+                            />
+
+                            <DiscountSection
+                                discount={discount}
+                                onDiscountChange={setDiscount}
+                                subtotal={calculateSubtotal()}
                                 loading={loading}
                             />
 

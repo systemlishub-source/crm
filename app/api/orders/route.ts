@@ -14,7 +14,8 @@ const orderSchema = z.object({
   clientId: z.string().uuid(),
   notes: z.string().optional().nullable(),
   purchaseDate: z.string().datetime().optional(),
-  orderItems: z.array(orderItemSchema).min(1)
+  orderItems: z.array(orderItemSchema).min(1),
+  discount: z.number().min(0).max(100).default(0) 
 });
 
 
@@ -100,6 +101,7 @@ export async function POST(req: NextRequest) {
           userId: authenticatedUser.userId,
           notes: body.notes || null,
           purchaseDate: body.purchaseDate ? new Date(body.purchaseDate) : new Date(),
+          discount: body.discount || 0
         }
       });
 
@@ -219,10 +221,18 @@ export async function GET(req: NextRequest) {
     });
 
     // Calcular total para cada pedido
-        const ordersWithTotal = orders.map(order => ({
-            ...order,
-            total: order.orderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)
-        }));
+      const ordersWithTotal = orders.map(order => {
+        const subtotal = order.orderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        const discountAmount = subtotal * (order.discount / 100);
+        const total = subtotal - discountAmount;
+
+        return {
+          ...order,
+          subtotal, // Adicione o subtotal se quiser mostrar
+          discountAmount, // Valor do desconto em reais
+          total // Total final com desconto
+        };
+      });
 
     const total = await prisma.order.count();
 

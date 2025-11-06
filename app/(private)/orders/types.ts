@@ -47,6 +47,7 @@ export interface Order {
     userId: string;
     purchaseDate: string;
     notes?: string;
+    discount: number;
     client: {
         id: string;
         name: string;
@@ -69,6 +70,8 @@ export interface Order {
         };
     }>;
     total: number;
+    subtotal: number; // Adicione se quiser
+    discountAmount: number; // Adicione se quiser
 }
 
 export interface OrderFormData {
@@ -79,4 +82,5 @@ export interface OrderFormData {
         productId: number;
         quantity: number;
     }>;
+    discount: number;
 }
