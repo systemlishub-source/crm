@@ -15,17 +15,16 @@ const orderSchema = z.object({
   notes: z.string().optional().nullable(),
   purchaseDate: z.string().datetime().optional(),
   orderItems: z.array(orderItemSchema).min(1),
-  discount: z.number().min(0).max(100).default(0) 
+  discount: z.number().min(0).default(0)
 });
 
 
 export async function POST(req: NextRequest) {
-  // Valida o token de autenticação
   const authenticatedUser = await verifyAuthHeader()
 
-    if (!authenticatedUser) {
-      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
-    }
+  if (!authenticatedUser) {
+    return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+  }
 
   try {
     const body = await req.json();
@@ -70,6 +69,9 @@ export async function POST(req: NextRequest) {
     // Mapear produtos para acesso rápido
     const productMap = new Map(products.map(p => [p.id, p]));
 
+    // Calcular subtotal para validar o desconto
+    let subtotal = 0;
+
     // Validar cada item do pedido
     for (const item of body.orderItems) {
       const product = productMap.get(item.productId);
@@ -90,6 +92,17 @@ export async function POST(req: NextRequest) {
 
       // Usar o preço atual de venda do produto
       item.price = product.saleValue;
+      
+      // Calcular subtotal
+      subtotal += item.price * item.quantity;
+    }
+
+    // Validar se o desconto não é maior que o subtotal
+    if (body.discount > subtotal) {
+      return NextResponse.json(
+        { error: `Desconto (R$ ${body.discount}) não pode ser maior que o subtotal (R$ ${subtotal})` },
+        { status: 400 }
+      );
     }
 
     // Criar a ordem e os itens em uma transação
@@ -101,7 +114,7 @@ export async function POST(req: NextRequest) {
           userId: authenticatedUser.userId,
           notes: body.notes || null,
           purchaseDate: body.purchaseDate ? new Date(body.purchaseDate) : new Date(),
-          discount: body.discount || 0
+          discount: body.discount || 0 // Agora armazena o valor em reais
         }
       });
 
@@ -140,7 +153,7 @@ export async function POST(req: NextRequest) {
               id: true,
               name: true,
               email: true,
-              status:true
+              status: true
             }
           },
           orderItems: {
@@ -209,7 +222,7 @@ export async function GET(req: NextRequest) {
                 id: true,
                 name: true,
                 code: true,
-                status:true
+                status: true
               }
             }
           }
@@ -220,31 +233,35 @@ export async function GET(req: NextRequest) {
       }
     });
 
-    // Calcular total para cada pedido
-      const ordersWithTotal = orders.map(order => {
-        const subtotal = order.orderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-        const discountAmount = subtotal * (order.discount / 100);
-        const total = subtotal - discountAmount;
+    // Calcular total para cada pedido (agora com desconto em reais)
+    const ordersWithTotal = orders.map(order => {
+      const subtotal = order.orderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      const discountAmount = order.discount; // Já é o valor em reais
+      const total = subtotal - discountAmount;
 
-        return {
-          ...order,
-          subtotal, // Adicione o subtotal se quiser mostrar
-          discountAmount, // Valor do desconto em reais
-          total // Total final com desconto
-        };
-      });
+      // Calcular percentual de desconto para exibição (opcional)
+      const discountPercentage = subtotal > 0 ? (discountAmount / subtotal) * 100 : 0;
+
+      return {
+        ...order,
+        subtotal,
+        discountAmount, // Valor do desconto em reais
+        discountPercentage: Math.round(discountPercentage * 100) / 100, // Percentual calculado
+        total // Total final com desconto
+      };
+    });
 
     const total = await prisma.order.count();
 
     return NextResponse.json({
-            orders: ordersWithTotal,
-            pagination: {
-                page,
-                limit,
-                total,
-                pages: Math.ceil(total / limit)
-            }
-        });
+      orders: ordersWithTotal,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit)
+      }
+    });
 
   } catch (error) {
     console.error('Error fetching orders:', error);

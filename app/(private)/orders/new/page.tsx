@@ -16,6 +16,7 @@ import { Client } from "../../clients/types";
 import { Toolbar } from "primereact/toolbar";
 import DiscountSection from "./DiscountSection";
 
+
 const emptyClient: Client = {
     id: '',
     name: '',
@@ -53,7 +54,7 @@ export default function NewOrderPage() {
     const [clientDialog, setClientDialog] = useState<boolean>(false);
     const [newClient, setNewClient] = useState<Client>(emptyClient);
     const [submitted, setSubmitted] = useState<boolean>(false);
-    const [discount, setDiscount] = useState<number>(0);
+    const [discount, setDiscount] = useState<number>(0); // Agora é valor em reais
 
     
     useEffect(() => {
@@ -122,6 +123,7 @@ export default function NewOrderPage() {
     setSelectedProduct(null);
     setQuantity(1);
 };
+
     const removeProduct = (productId: number) => {
         const product = orderItems.find(item => item.productId === productId)?.product;
         setOrderItems(orderItems.filter(item => item.productId !== productId));
@@ -136,8 +138,7 @@ export default function NewOrderPage() {
 
     const calculateTotal = () => {
         const subtotal = calculateSubtotal();
-        const discountAmount = subtotal * (discount / 100);
-        return subtotal - discountAmount;
+        return subtotal - discount; // Agora desconto é direto em reais
     };
 
     const createOrder = async () => {
@@ -151,13 +152,19 @@ export default function NewOrderPage() {
             return;
         }
 
+        const subtotal = calculateSubtotal();
+        if (discount > subtotal) {
+            showToast('error', 'Erro', 'Desconto não pode ser maior que o subtotal');
+            return;
+        }
+
         try {
             setLoading(true);
 
             const orderData = {
                 clientId: selectedClient.id,
                 notes: notes,
-                discount: discount,
+                discount: discount, // Agora envia valor em reais
                 orderItems: orderItems.map(item => ({
                     productId: item.productId,
                     quantity: item.quantity
@@ -174,12 +181,13 @@ export default function NewOrderPage() {
                 showToast('success', 'Sucesso', 'Registro criado com sucesso!');
                 router.push('/orders');
             } else {
-                throw new Error('Falha ao criar registro');
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Falha ao criar registro');
             }
 
         } catch (error) {
             console.error("Erro ao criar registro:", error);
-            showToast('error', 'Erro', 'Falha ao criar registro');
+            showToast('error', 'Erro', error instanceof Error ? error.message : 'Falha ao criar registro');
         } finally {
             setLoading(false);
         }
@@ -290,6 +298,7 @@ export default function NewOrderPage() {
                                     onCreateOrder={createOrder}
                                     isValid={isValidOrder}
                                     loading={loading}
+
                                 />
                             </div>
                         </div>
