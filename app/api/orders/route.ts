@@ -15,7 +15,8 @@ const orderSchema = z.object({
   notes: z.string().optional().nullable(),
   purchaseDate: z.string().datetime().optional(),
   orderItems: z.array(orderItemSchema).min(1),
-  discount: z.number().min(0).default(0)
+  discount: z.number().min(0).default(0),
+  paymentMethod: z.enum(['Pix', 'Credito', 'Debito', 'Dinheiro']).default('Dinheiro')
 });
 
 
@@ -114,7 +115,8 @@ export async function POST(req: NextRequest) {
           userId: authenticatedUser.userId,
           notes: body.notes || null,
           purchaseDate: body.purchaseDate ? new Date(body.purchaseDate) : new Date(),
-          discount: body.discount || 0 // Agora armazena o valor em reais
+          discount: body.discount || 0,
+          paymentMethod: body.paymentMethod // Novo campo
         }
       });
 
@@ -183,7 +185,6 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// Opcional: Rota GET para listar pedidos
 export async function GET(req: NextRequest) {
   const authenticatedUser = await verifyAuthHeader();
 

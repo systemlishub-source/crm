@@ -15,6 +15,7 @@ import { fetchClientsProducts } from "../services/fetchClientsProducts";
 import { Client } from "../../clients/types";
 import { Toolbar } from "primereact/toolbar";
 import DiscountSection from "./DiscountSection";
+import PaymentMethodSection, { PaymentMethod } from "../components/PaymentMethodSection/PaymentMethodSection";
 
 
 const emptyClient: Client = {
@@ -55,6 +56,7 @@ export default function NewOrderPage() {
     const [newClient, setNewClient] = useState<Client>(emptyClient);
     const [submitted, setSubmitted] = useState<boolean>(false);
     const [discount, setDiscount] = useState<number>(0); // Agora é valor em reais
+    const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('Dinheiro');
 
     
     useEffect(() => {
@@ -164,7 +166,8 @@ export default function NewOrderPage() {
             const orderData = {
                 clientId: selectedClient.id,
                 notes: notes,
-                discount: discount, // Agora envia valor em reais
+                discount: discount, 
+                paymentMethod: paymentMethod,// Agora envia valor em reais
                 orderItems: orderItems.map(item => ({
                     productId: item.productId,
                     quantity: item.quantity
@@ -286,6 +289,12 @@ export default function NewOrderPage() {
                                 loading={loading}
                             />
 
+                            <PaymentMethodSection
+                                paymentMethod={paymentMethod}
+                                onPaymentMethodChange={setPaymentMethod}
+                                loading={loading}
+                            />
+
                             <DiscountSection
                                 discount={discount}
                                 onDiscountChange={setDiscount}
@@ -298,7 +307,10 @@ export default function NewOrderPage() {
                                     onCreateOrder={createOrder}
                                     isValid={isValidOrder}
                                     loading={loading}
-
+                                    subtotal={calculateSubtotal()}
+                                    discount={discount}
+                                    total={calculateTotal()}
+                                    paymentMethod={paymentMethod}
                                 />
                             </div>
                         </div>

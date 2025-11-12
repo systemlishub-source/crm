@@ -48,6 +48,7 @@ export interface Order {
     purchaseDate: string;
     notes?: string;
     discount: number;
+     paymentMethod: string;
     client: {
         id: string;
         name: string;

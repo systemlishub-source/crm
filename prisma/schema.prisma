@@ -116,6 +116,7 @@ model Order {
   purchaseDate DateTime @default(now())
   notes        String?
   discount     Float    @default(0)
+  paymentMethod String  @default("Dinheiro") 
 
   orderItems OrderItem[]
 }

@@ -62,24 +62,6 @@ export default function DiscountSection({
           )}
         </div>
         
-        {discount > 0 && (
-          <div className="col-12 mt-3">
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span>Subtotal:</span>
-                <span>R$ {subtotal.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between text-red-500">
-                <span>Desconto {discountPercentage > 0 && `(${discountPercentage.toFixed(1)}%)`}:</span>
-                <span>- R$ {discount.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between font-semibold border-t pt-2 mt-2">
-                <span>Total com desconto:</span>
-                <span>R$ {total.toFixed(2)}</span>
-              </div>
-            </div>
-          </div>
-        )}
 
         {discount > 0 && discount === subtotal && (
           <div className="col-12 mt-2">
